@@ -18,6 +18,7 @@ import org.json.JSONObject;
 
 import com.ozexpert.devicemeta.Utils;
 import android.provider.Settings;
+import android.util.Log;
 
 /**
  * This class echoes a string called from JavaScript.
