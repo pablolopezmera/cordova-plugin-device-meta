@@ -26,6 +26,7 @@ import android.util.Log;
 public class DeviceMeta extends CordovaPlugin {
 
     private static Context ctx;
+    public static final String TAG = "DeviceMeta";
 
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
@@ -40,8 +41,9 @@ public class DeviceMeta extends CordovaPlugin {
             r.put("ip", this.getIpAddress());
             r.put("manufacturer", this.getManufacturer());
             r.put("manufacturer", this.getManufacturer());
-            r.put("DEVELOPMENT_SETTINGS_ENABLED", this.isADBModeEnabled());
-            r.put("ADB_ENABLED", this.isDevelopmentSettingsEnabled());
+            r.put("DEVELOPMENT_SETTINGS_ENABLED", this.isDevelopmentSettingsEnabled());
+            r.put("ADB_ENABLED", this.isADBModeEnabled());
+            r.put("INSTALL_NON_MARKET_APPS", this.isInstallNonMarketApps());
 
             callbackContext.success(r);
         } else {
@@ -49,6 +51,35 @@ public class DeviceMeta extends CordovaPlugin {
         }
         return true;
     }
+
+    /**
+     * checks if ADB mode is on
+     * especially for debug mode check
+     */
+    public boolean isInstallNonMarketApps(){
+        boolean result = false;
+        try {
+            result = getInstallNonMarketApps() == 1;
+        } catch (Exception e) {
+            Log.e(TAG, e.getMessage());
+        }
+        Log.d(TAG, "INSTALL_NON_MARKET_APPS isInstallNonMarketApps: " + result);
+        return result;
+    }
+
+    /**
+     * get device ADB mode info
+     */
+    public int getInstallNonMarketApps(){
+        int mode;
+        if (Build.VERSION.SDK_INT >= 21){ // Lollipop
+            mode = Settings.Global.getInt(ctx.getContentResolver(), Settings.Global.INSTALL_NON_MARKET_APPS, 0);
+        } else {
+            mode = Settings.Secure.getInt(ctx.getContentResolver(), Settings.Secure.INSTALL_NON_MARKET_APPS, 0);
+        }
+        return mode;
+    }
+
 
     /**
      * checks if ADB mode is on
@@ -79,19 +110,6 @@ public class DeviceMeta extends CordovaPlugin {
     }
 
     /**
-     * get device ADB mode info
-     */
-    public int getDevelopmentSettingsEnabled(){
-        int mode;
-        if (Build.VERSION.SDK_INT >= 17){ // Jelly_Bean_MR1 and above
-            mode = Settings.Global.getInt(ctx.getContentResolver(), Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0);
-        } else { // Pre-Jelly_Bean_MR1
-            mode = Settings.Secure.getInt(ctx.getContentResolver(), Settings.Secure.DEVELOPMENT_SETTINGS_ENABLED, 0);
-        }
-        return mode;
-    }
-
-    /**
      * checks if ADB mode is on
      * especially for debug mode check
      */
@@ -102,8 +120,21 @@ public class DeviceMeta extends CordovaPlugin {
         } catch (Exception e) {
             Log.e(TAG, e.getMessage());
         }
-        Log.d(TAG, "ADB mode enabled: " + result);
+        Log.d(TAG, "isDevelopmentSettingsEnabled DEVELOPMENT_SETTINGS_ENABLED: " + result);
         return result;
+    }
+
+    /**
+     * get device ADB mode info
+     */
+    public int getDevelopmentSettingsEnabled(){
+        int mode;
+        if (Build.VERSION.SDK_INT >= 17){ // Jelly_Bean_MR1 and above
+            mode = Settings.Global.getInt(ctx.getContentResolver(), Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0);
+        } else { // Pre-Jelly_Bean_MR1
+            mode = Settings.Secure.getInt(ctx.getContentResolver(), Settings.Secure.DEVELOPMENT_SETTINGS_ENABLED, 0);
+        }
+        return mode;
     }
 
     private boolean isDebug() {
